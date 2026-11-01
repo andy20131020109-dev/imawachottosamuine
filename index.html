@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anki 日語字卡學習</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #ffffff;
+            --text-secondary: #888888;
+            --border-color: #333333;
+            --btn-blue: #007acc;
+            --btn-blue-hover: #005999;
+            --btn-again: #cf6679;
+            --btn-hard: #ffb74d;
+            --btn-good: #4caf50;
+            --btn-easy: #2196f3;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 頂部導航/計數器 */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+
+        .counters {
+            display: flex;
+            gap: 12px;
+            font-weight: bold;
+        }
+
+        .counter-new { color: #2196f3; }
+        .counter-learn { color: #f44336; }
+        .counter-review { color: #4caf50; }
+
+        .header-info {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .home-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .home-btn:hover {
+            background-color: #333;
+        }
+
+        /* 主畫面容器 */
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* 選擇主題畫面 */
+        #menu-screen {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+            align-items: center;
+        }
+
+        .menu-title {
+            font-size: 20px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .menu-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            width: 100%;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .menu-card:hover {
+            background-color: #2a2a2a;
+            border-color: var(--btn-blue);
+        }
+
+        /* 閃卡本體 */
+        #study-screen {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            justify-content: space-between;
+            padding-bottom: 20px;
+        }
+
+        .card-container {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 24px;
+            margin-bottom: 16px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        /* 左上角指示小字 */
+        .card-type-label {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background-color: rgba(255, 255, 255, 0.08);
+            color: var(--text-secondary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        .audio-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .audio-btn:hover {
+            background-color: #333;
+        }
+
+        .card-content {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            word-break: break-all;
+        }
+
+        .card-divider {
+            width: 80%;
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 16px 0;
+            display: none;
+        }
+
+        .card-back {
+            font-size: 32px;
+            color: #4caf50;
+            font-weight: bold;
+            display: none;
+            word-break: break-all;
+        }
+
+        /* 底部按鈕區 */
+        .action-area {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn-show {
+            background-color: var(--btn-blue);
+            color: white;
+        }
+        .btn-show:hover {
+            background-color: var(--btn-blue-hover);
+        }
+
+        .rating-container {
+            display: none;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            width: 100%;
+        }
+
+        .btn-rate {
+            padding: 10px 4px;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .btn-rate span {
+            font-size: 10px;
+            opacity: 0.8;
+        }
+
+        .rate-again { background-color: var(--btn-again); }
+        .rate-hard { background-color: var(--btn-hard); }
+        .rate-good { background-color: var(--btn-good); }
+        .rate-easy { background-color: var(--btn-easy); }
+
+        .completion-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            flex: 1;
+            gap: 16px;
+        }
+
+        .completion-screen h2 {
+            font-size: 24px;
+            color: #4caf50;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="counters">
+            <span class="counter-new" id="count-new">0</span>
+            <span class="counter-learn" id="count-learn">0</span>
+            <span class="counter-review" id="count-review">0</span>
+        </div>
+        <div class="header-info">ANKI MOBILE · 手動按鈕發音</div>
+        <button class="home-btn" id="home-btn" onclick="returnToMenu()" style="display: none;">🏠 選擇類別</button>
+    </header>
+
+    <div class="container">
+        <!-- 選擇選單畫面 -->
+        <div id="menu-screen">
+            <div class="menu-title">請選擇學習類別</div>
+            <div class="menu-card" onclick="startDeck('veg')">蔬菜水果 (完整雙向卡片)</div>
+            <div class="menu-card" onclick="startDeck('market')">超市商品 (完整雙向卡片)</div>
+        </div>
+
+        <!-- 學習卡片畫面 -->
+        <div id="study-screen">
+            <div class="card-container" id="card-box">
+                <div class="card-type-label" id="card-type-label">假名 ➔ 漢字</div>
+                <button class="audio-btn" onclick="playAudio()">🔊 發音</button>
+                <div class="card-content" id="card-front">正面內容</div>
+                <div class="card-divider" id="card-divider"></div>
+                <div class="card-back" id="card-back">反面內容</div>
+            </div>
+
+            <div class="action-area">
+                <button class="btn btn-show" id="btn-show" onclick="showAnswer()">顯示答案</button>
+                <div class="rating-container" id="rating-container">
+                    <button class="btn-rate rate-again" onclick="rateCard(1)">再次 <span>&lt;1分</span></button>
+                    <button class="btn-rate rate-hard" onclick="rateCard(2)">難 <span>&lt;10分</span></button>
+                    <button class="btn-rate rate-good" onclick="rateCard(3)">進行 <span>(結束)</span></button>
+                    <button class="btn-rate rate-easy" onclick="rateCard(4)">簡單 <span>(結束)</span></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 完成畫面 -->
+        <div class="completion-screen" id="completion-screen">
+            <h2>🎉 恭喜！此組卡片已全部複習完畢！</h2>
+            <button class="btn btn-show" onclick="returnToMenu()">返回選擇選單</button>
+        </div>
+    </div>
+
+    <script>
+        const vegData = [
+            { h: "だいこん", k: "大根", c: "白蘿蔔" },
+            { h: "にんじん", k: "人参", c: "紅蘿蔔" },
+            { h: "たまねぎ", k: "玉ねぎ", c: "洋蔥" },
+            { h: "きゅうり", k: "胡瓜", c: "小黃瓜" },
+            { h: "なす", k: "茄子", c: "茄子" },
+            { h: "かぼちゃ", k: "南瓜", c: "南瓜" },
+            { h: "ながねぎ", k: "長葱", c: "青蔥" },
+            { h: "はくさい", k: "白菜", c: "大白菜" },
+            { h: "ほうれんそう", k: "菠菜", c: "菠菜" },
+            { h: "れんこん", k: "蓮根", c: "蓮藕" },
+            { h: "いちご", k: "苺", c: "草莓" },
+            { h: "りんご", k: "林檎", c: "蘋果" },
+            { h: "ぶどう", k: "葡萄", c: "葡萄" },
+            { h: "すいか", k: "西瓜", c: "西瓜" },
+            { h: "もも", k: "桃", c: "水蜜桃" },
+            { h: "かき", k: "柿", c: "柿子" },
+            { h: "なし", k: "梨", c: "梨子" },
+            { h: "みかん", k: "蜜柑", c: "橘子" },
+            { h: "いちじく", k: "無花果", c: "無花果" },
+            { h: "れもん", k: "檸檬", c: "檸檬" }
+        ];
+
+        const marketData = [
+            { h: "りんご", k: "林檎", c: "蘋果" },
+            { h: "ぶどう", k: "葡萄", c: "葡萄" },
+            { h: "いちご", k: "苺", c: "草莓" },
+            { h: "みかん", k: "", c: "橘子" }, // 無漢字
+            { h: "すいか", k: "西瓜", c: "西瓜" },
+            { h: "ぎゅうにゅう", k: "牛乳", c: "牛奶" },
+            { h: "たまご", k: "卵", c: "雞蛋" },
+            { h: "にく", k: "肉", c: "肉" },
+            { h: "ぎゅうにく", k: "牛肉", c: "牛肉" },
+            { h: "ぶたにく", k: "豚肉", c: "豬肉" },
+            { h: "とりにく", k: "鶏肉", c: "雞肉" },
+            { h: "さかな", k: "魚", c: "魚" }
+        ];
+
+        let currentQueue = [];
+        let currentCard = null;
+        let isAnswerShown = false;
+
+        function startDeck(type) {
+            let rawData = (type === 'veg') ? vegData : marketData;
+            currentQueue = [];
+
+            // 建立卡片：
+            // 1. 如果有漢字：生成「假名 ➔ 漢字」卡片，以及「漢字 ➔ 國語」卡片
+            // 2. 如果沒有漢字：生成「假名 ➔ 國語」卡片
+            rawData.forEach(item => {
+                let hasKanji = item.k && item.k.trim() !== "";
+                
+                if (hasKanji) {
+                    // 卡片一：假名 ➔ 漢字
+                    currentQueue.push({
+                        front: item.h,
+                        back: item.k,
+                        label: "假名 ➔ 漢字",
+                        audioText: item.h
+                    });
+                    // 卡片二：漢字 ➔ 國語
+                    currentQueue.push({
+                        front: item.k,
+                        back: item.c,
+                        label: "漢字 ➔ 國語",
+                        audioText: item.h // 發音讀日文
+                    });
+                } else {
+                    // 卡片：假名 ➔ 國語
+                    currentQueue.push({
+                        front: item.h,
+                        back: item.c,
+                        label: "假名 ➔ 國語",
+                        audioText: item.h
+                    });
+                }
+            });
+
+            // 隨機打散順序
+            currentQueue.sort(() => Math.random() - 0.5);
+
+            document.getElementById('menu-screen').style.display = 'none';
+            document.getElementById('study-screen').style.display = 'flex';
+            document.getElementById('completion-screen').style.display = 'none';
+            document.getElementById('home-btn').style.display = 'block';
+
+            loadNextCard();
+        }
+
+        function returnToMenu() {
+            document.getElementById('menu-screen').style.display = 'flex';
+            document.getElementById('study-screen').style.display = 'none';
+            document.getElementById('completion-screen').style.display = 'none';
+            document.getElementById('home-btn').style.display = 'none';
+        }
+
+        function updateCounters() {
+            document.getElementById('count-new').innerText = currentQueue.length;
+            document.getElementById('count-learn').innerText = '0';
+            document.getElementById('count-review').innerText = '0';
+        }
+
+        function loadNextCard() {
+            if (currentQueue.length === 0) {
+                document.getElementById('study-screen').style.display = 'none';
+                document.getElementById('completion-screen').style.display = 'flex';
+                document.getElementById('count-new').innerText = '0';
+                return;
+            }
+
+            updateCounters();
+            isAnswerShown = false;
+            currentCard = currentQueue[0];
+
+            document.getElementById('card-type-label').innerText = currentCard.label;
+            document.getElementById('card-front').innerText = currentCard.front;
+            document.getElementById('card-back').innerText = currentCard.back;
+            document.getElementById('card-back').style.display = 'none';
+            document.getElementById('card-divider').style.display = 'none';
+
+            document.getElementById('btn-show').style.display = 'block';
+            document.getElementById('rating-container').style.display = 'none';
+        }
+
+        function showAnswer() {
+            isAnswerShown = true;
+            document.getElementById('card-back').style.display = 'block';
+            document.getElementById('card-divider').style.display = 'block';
+            document.getElementById('btn-show').style.display = 'none';
+            document.getElementById('rating-container').style.display = 'grid';
+        }
+
+        function rateCard(rating) {
+            const card = currentQueue.shift();
+
+            // 若按 再次(1) 或 難(2)，放回隊列後方重練
+            if (rating === 1 || rating === 2) {
+                currentQueue.push(card);
+            }
+
+            loadNextCard();
+        }
+
+        function playAudio() {
+            if (!currentCard) return;
+            const textToSpeech = currentCard.audioText;
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(textToSpeech);
+                utterance.lang = 'ja-JP';
+                utterance.rate = 0.9;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+    </script>
+</body>
+</html>
